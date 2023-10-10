@@ -1,2 +1,4 @@
 # Files to ignore
 /data/*.pyc
+/data/__pycache__
+/.vscode
