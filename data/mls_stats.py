@@ -91,10 +91,12 @@ def league_stats(year: int, search: str, position: Optional[str] = None):
         conf = []
         for i in range(len(stats_df)):
             if (stats_df['club.abbreviation'].loc[stats_df.index[i]] in west):
-                conf.append('W')
+                conf.append('Western')
             elif (stats_df['club.abbreviation'].loc[stats_df.index[i]] in east):
-                conf.append('E')
-        stats_df.assign(conference = conf)
+                conf.append('Eastern')
+            else:
+                conf.append('Inactive')
+        stats_df['conference'] = conf
         return stats_df
 
 # Create objects for each team:
