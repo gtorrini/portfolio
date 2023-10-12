@@ -6,6 +6,24 @@ import pandas as pd
 from pandas import DataFrame
 import requests
 
+def add_vals(og_stats: DataFrame) -> DataFrame:
+    # Add conference categories
+    west = ['ATX', 'COL', 'DAL', 'HOU', 'LA', 'LAFC', 'MIN', 'POR', 'RSL', 'SEA', 'SJ', 'SKC', 'STL', 'VAN']
+    east = ['ATL', 'CHI', 'CIN', 'CLB', 'CLT', 'DC', 'MIA', 'MTL', 'NE', 'NSH', 'NYC', 'ORL', 'PHI', 'RBNY', 'TOR']
+    conf = []
+    for i in range(len(og_stats)):
+        if (og_stats['club.abbreviation'].loc[og_stats.index[i]] in west):
+            conf.append('Western')
+        elif (og_stats['club.abbreviation'].loc[og_stats.index[i]] in east):
+            conf.append('Eastern')
+        else:
+            conf.append('Inactive')
+    mod_stats = og_stats.assign(conference = conf)
+
+    # Add calculated values
+    mod_stats = mod_stats.assign(ontarget_conv_per = lambda x: (x.regular_season_statistics.goals / x.regular_season_statistics.ontarget_scoring_att))
+    return mod_stats
+
 class TeamStats:
     def __init__(self, stats: DataFrame) -> None:
         self.all = stats
@@ -44,7 +62,7 @@ class Team:
             # Build DataFrame from JSON 
             norm_df = pd.json_normalize(r.json(), max_level=2)
             current_df = norm_df[norm_df['leave_date'].isna()]    # only select players from current roster
-            stats_df = TeamStats(current_df)
+            stats_df = TeamStats(add_vals(current_df))
             return stats_df
         
 def league_stats(year: int, search: str, position: Optional[str] = None):
@@ -83,20 +101,8 @@ def league_stats(year: int, search: str, position: Optional[str] = None):
     else:
         # Build DataFrame from JSON 
         norm_df = pd.json_normalize(r.json(), max_level=2)
-        stats_df = norm_df[~norm_df['club.abbreviation'].isna()]     # only select actual teams
-
-        # Sort into conferences
-        west = ['ATX', 'COL', 'DAL', 'HOU', 'LA', 'LAFC', 'MIN', 'POR', 'RSL', 'SEA', 'SJ', 'SKC', 'STL', 'VAN']
-        east = ['ATL', 'CHI', 'CIN', 'CLB', 'CLT', 'DC', 'MIA', 'MTL', 'NE', 'NSH', 'NYC', 'ORL', 'PHI', 'RBNY', 'TOR']
-        conf = []
-        for i in range(len(stats_df)):
-            if (stats_df['club.abbreviation'].loc[stats_df.index[i]] in west):
-                conf.append('Western')
-            elif (stats_df['club.abbreviation'].loc[stats_df.index[i]] in east):
-                conf.append('Eastern')
-            else:
-                conf.append('Inactive')
-        stats_df['conference'] = conf
+        current_df = norm_df[~norm_df['club.abbreviation'].isna()]     # only select actual teams
+        stats_df = add_vals(current_df)
         return stats_df
 
 # Create objects for each team:
