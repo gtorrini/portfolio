@@ -21,7 +21,7 @@ def add_vals(og_stats: DataFrame) -> DataFrame:
     mod_stats = og_stats.assign(conference = conf)
 
     # Add calculated values
-    mod_stats = mod_stats.assign(ontarget_conv_per = lambda x: (x.regular_season_statistics.goals / x.regular_season_statistics.ontarget_scoring_att))
+    mod_stats = mod_stats.assign(ontarget_conv_per = mod_stats['regular_season_statistics.goals'] / mod_stats['regular_season_statistics.ontarget_scoring_att'])
     return mod_stats
 
 class TeamStats:
